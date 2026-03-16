@@ -111,3 +111,15 @@ Content-Type: application/json
 ### Agent Schema 조회
 GET http://127.0.0.1:33333/api/v1/agent-schema
 Accept: application/json
+
+### 뉴스 검색 - 기본 조회
+GET http://127.0.0.1:33333/api/v1/news/search?keyword=삼성전자
+Accept: application/json
+
+### 뉴스 검색 - 페이징 조회
+GET http://127.0.0.1:33333/api/v1/news/search?keyword=삼성전자&page=2&page_size=5
+Accept: application/json
+
+### 뉴스 검색 - 결과 없는 키워드
+GET http://127.0.0.1:33333/api/v1/news/search?keyword=xyznonexistentkeyword123
+Accept: application/json

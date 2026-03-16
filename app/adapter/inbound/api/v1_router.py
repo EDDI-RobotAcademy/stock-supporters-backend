@@ -9,6 +9,7 @@ from fastapi import APIRouter
 
 from app.domains.agent.adapter.inbound.api.agent_router import router as agent_router
 from app.domains.api_schema.adapter.inbound.api.api_schema_router import router as api_schema_router
+from app.domains.news.adapter.inbound.api.news_router import router as news_router
 from app.domains.post.adapter.inbound.api.post_router import router as post_router
 from app.domains.stock.adapter.inbound.api.stock_router import router as stock_router
 
@@ -20,6 +21,6 @@ api_v1_router.include_router(post_router)       # POST: /api/v1/post/...
 api_v1_router.include_router(stock_router)      # STOCK: /api/v1/stock/...
 api_v1_router.include_router(agent_router)       # AGENT: /api/v1/agent/...
 api_v1_router.include_router(api_schema_router)  # AGENT SCHEMA: /api/v1/agent-schema
-# api_v1_router.include_router(news_router)     # 뉴스 에이전트 완성 시 여기 추가
+api_v1_router.include_router(news_router)        # NEWS: /api/v1/news/...
 # api_v1_router.include_router(finance_router)  # 재무 에이전트
 # api_v1_router.include_router(disclosure_router)  # 공시 에이전트
