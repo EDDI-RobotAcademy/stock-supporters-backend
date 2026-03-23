@@ -87,7 +87,15 @@ async def request_access_token_after_redirection(
             user_token = await token_cache.issue_user_token(account_id=account_lookup.account_id)
 
             redirect_url = f"{settings.cors_allowed_frontend_url}/auth-callback?token={user_token}"
-            return RedirectResponse(url=redirect_url, status_code=302)
+            response = RedirectResponse(url=redirect_url, status_code=302)
+            response.set_cookie(
+                key="user_token",
+                value=user_token,
+                httponly=True,
+                path="/",
+                max_age=settings.session_ttl_seconds,
+            )
+            return response
 
         # 미가입 회원 — 임시 토큰 발급
         temp_token = await IssueTempTokenUseCase(
@@ -101,7 +109,15 @@ async def request_access_token_after_redirection(
         logger.info("[임시 토큰 발급] 발급 완료 — token prefix: %s...", temp_token.token[:8])
 
         redirect_url = f"{settings.cors_allowed_frontend_url}/auth-callback?token={temp_token.token}"
-        return RedirectResponse(url=redirect_url, status_code=302)
+        response = RedirectResponse(url=redirect_url, status_code=302)
+        response.set_cookie(
+            key="temp_token",
+            value=temp_token.token,
+            httponly=True,
+            path="/",
+            max_age=temp_token.ttl_seconds,
+        )
+        return response
 
     except ValueError as e:
         raise AppException(status_code=400, message=str(e))

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(find D:Documentssimsysai_agent_edu_devstock-supporters-backend -type f -name *.py -path */auth* -o -name *auth*.py)"
+    ]
+  }
+}

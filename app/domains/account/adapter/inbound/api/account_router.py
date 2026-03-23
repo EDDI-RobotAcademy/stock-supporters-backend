@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+from urllib.parse import quote
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Cookie, Depends
@@ -23,8 +24,9 @@ router = APIRouter(prefix="/account", tags=["account"])
 settings = get_settings()
 
 
-@router.post("/register")
-async def register_account(
+
+@router.post("/sign-up")
+async def sign_up(
     request: CreateAccountRequest,
     temp_token: Optional[str] = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
@@ -53,7 +55,7 @@ async def register_account(
     )
     response.set_cookie(
         key="nickname",
-        value=result.nickname or "",
+        value=quote(result.nickname or ""),
         httponly=True,
         path="/",
         max_age=settings.session_ttl_seconds,
