@@ -8,8 +8,8 @@ from app.infrastructure.config.settings import get_settings
 settings = get_settings()
 
 DATABASE_URL = (
-    f"mysql+aiomysql://{quote_plus(settings.mysql_user)}:{quote_plus(settings.mysql_password)}"
-    f"@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_schema}"
+    f"postgresql+asyncpg://{quote_plus(settings.postgres_user)}:{quote_plus(settings.postgres_password)}"
+    f"@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 )
 
 engine = create_async_engine(DATABASE_URL, echo=settings.debug)
