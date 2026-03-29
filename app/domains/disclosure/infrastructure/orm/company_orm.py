@@ -16,6 +16,8 @@ class CompanyOrm(Base):
     market_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     market_cap_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_top300: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_collect_target: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_requested_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)

@@ -20,7 +20,6 @@ import app.domains.board.infrastructure.orm.board_orm  # noqa: F401
 import app.domains.post.infrastructure.orm.post_orm  # noqa: F401
 import app.domains.stock_theme.infrastructure.orm.stock_theme_orm  # noqa: F401
 import app.domains.disclosure.infrastructure.orm.company_orm  # noqa: F401
-import app.domains.disclosure.infrastructure.orm.company_collection_target_orm  # noqa: F401
 import app.domains.disclosure.infrastructure.orm.company_data_coverage_orm  # noqa: F401
 import app.domains.disclosure.infrastructure.orm.disclosure_orm  # noqa: F401
 import app.domains.disclosure.infrastructure.orm.disclosure_document_orm  # noqa: F401

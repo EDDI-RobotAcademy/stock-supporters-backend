@@ -64,13 +64,12 @@ class SeasonalCollectUseCase:
                 pblntf_ty=pblntf_ty,
             )
 
-            # 2. Top300 기업 필터링
-            top300 = await self._company_repo.find_top300()
-            top300_codes = {c.corp_code for c in top300}
-            filtered = [item for item in all_items if item.corp_code in top300_codes]
+            # 2. 수집 대상 기업 필터링 (Top300 + 최근 30일 내 요청된 기업)
+            collect_targets = await self._company_repo.find_collect_targets(recent_days=30)
+            target_codes = {c.corp_code for c in collect_targets}
+            filtered = [item for item in all_items if item.corp_code in target_codes]
 
             # 3. 분류 및 저장
-            classifier = DisclosureClassifier()
             disclosures: list[Disclosure] = []
             for item in filtered:
                 disclosures.append(
@@ -82,9 +81,9 @@ class SeasonalCollectUseCase:
                         pblntf_ty=item.pblntf_ty,
                         pblntf_detail_ty=item.pblntf_detail_ty,
                         rm=item.rm,
-                        disclosure_group=classifier.classify_group(item.report_nm),
+                        disclosure_group=DisclosureClassifier.classify_group(item.report_nm),
                         source_mode="scheduled",
-                        is_core=classifier.is_core_disclosure(item.report_nm),
+                        is_core=DisclosureClassifier.is_core_disclosure(item.report_nm),
                     )
                 )
 

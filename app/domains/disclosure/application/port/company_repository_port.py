@@ -33,3 +33,11 @@ class CompanyRepositoryPort(ABC):
     @abstractmethod
     async def update_top300_flags(self, top300_corp_codes: list[str]) -> int:
         pass
+
+    @abstractmethod
+    async def mark_as_collect_target(self, corp_code: str) -> bool:
+        pass
+
+    @abstractmethod
+    async def find_collect_targets(self, recent_days: int = 30) -> list[Company]:
+        pass

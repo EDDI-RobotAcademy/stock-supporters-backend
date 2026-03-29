@@ -14,7 +14,9 @@ class CompanyMapper:
             market_type=orm.market_type,
             market_cap_rank=orm.market_cap_rank,
             is_top300=orm.is_top300,
+            is_collect_target=orm.is_collect_target,
             is_active=orm.is_active,
+            last_requested_at=orm.last_requested_at,
             created_at=orm.created_at,
             updated_at=orm.updated_at,
         )
@@ -28,7 +30,9 @@ class CompanyMapper:
             market_type=entity.market_type,
             market_cap_rank=entity.market_cap_rank,
             is_top300=entity.is_top300,
+            is_collect_target=entity.is_collect_target,
             is_active=entity.is_active,
+            last_requested_at=entity.last_requested_at,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

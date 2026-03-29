@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, or_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,14 +39,19 @@ class CompanyRepositoryImpl(CompanyRepositoryPort):
             for c in companies
         ]
 
+        excluded = insert(CompanyOrm).excluded
         stmt = (
             insert(CompanyOrm)
             .values(values)
             .on_conflict_do_update(
                 index_elements=["corp_code"],
                 set_={
-                    "corp_name": insert(CompanyOrm).excluded.corp_name,
-                    "stock_code": insert(CompanyOrm).excluded.stock_code,
+                    "corp_name": excluded.corp_name,
+                    "stock_code": excluded.stock_code,
+                    "market_type": excluded.market_type,
+                    "market_cap_rank": excluded.market_cap_rank,
+                    "is_top300": excluded.is_top300,
+                    "is_active": excluded.is_active,
                 },
             )
             .returning(CompanyOrm.id)
@@ -95,13 +101,42 @@ class CompanyRepositoryImpl(CompanyRepositoryPort):
             await self._db.commit()
             return 0
 
-        # 새로운 top300 설정 및 순위 부여
-        for rank, corp_code in enumerate(top300_corp_codes, start=1):
-            await self._db.execute(
-                update(CompanyOrm)
-                .where(CompanyOrm.corp_code == corp_code)
-                .values(is_top300=True, market_cap_rank=rank)
-            )
+        # 새로운 top300 설정 + 순위 부여 + 수집 대상 플래그 활성화 (벌크 CASE WHEN)
+        from sqlalchemy import case
+        case_expr = case(
+            *[(CompanyOrm.corp_code == code, rank) for rank, code in enumerate(top300_corp_codes, start=1)],
+        )
+        await self._db.execute(
+            update(CompanyOrm)
+            .where(CompanyOrm.corp_code.in_(top300_corp_codes))
+            .values(is_top300=True, is_collect_target=True, market_cap_rank=case_expr)
+        )
 
         await self._db.commit()
         return len(top300_corp_codes)
+
+    async def mark_as_collect_target(self, corp_code: str) -> bool:
+        result = await self._db.execute(
+            update(CompanyOrm)
+            .where(CompanyOrm.corp_code == corp_code)
+            .values(is_collect_target=True, last_requested_at=datetime.now())
+        )
+        await self._db.commit()
+        return result.rowcount > 0
+
+    async def find_collect_targets(self, recent_days: int = 30) -> list[Company]:
+        cutoff = datetime.now() - timedelta(days=recent_days)
+        stmt = (
+            select(CompanyOrm)
+            .where(
+                CompanyOrm.is_active.is_(True),
+                CompanyOrm.is_collect_target.is_(True),
+                or_(
+                    CompanyOrm.is_top300.is_(True),
+                    CompanyOrm.last_requested_at >= cutoff,
+                ),
+            )
+            .order_by(CompanyOrm.market_cap_rank.asc().nulls_last())
+        )
+        result = await self._db.execute(stmt)
+        return [CompanyMapper.to_entity(orm) for orm in result.scalars().all()]

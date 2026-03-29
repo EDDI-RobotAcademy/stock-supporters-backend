@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -61,25 +62,32 @@ class IncrementalCollectUseCase:
 
             end_date = datetime.now().strftime("%Y%m%d")
 
-            # 2. Top300 기업 코드 준비
-            top300 = await self._company_repo.find_top300()
-            top300_codes = {c.corp_code for c in top300}
+            # 2. 수집 대상 기업 코드 준비 (Top300 + 최근 30일 내 요청된 기업)
+            collect_targets = await self._company_repo.find_collect_targets(recent_days=30)
+            target_codes = {c.corp_code for c in collect_targets}
 
-            # 3. 수집 대상 유형별로 DART 조회
-            all_items = []
-            for pblntf_ty in TARGET_PBLNTF_TYPES:
-                items = await self._dart_api.fetch_all_pages(
+            # 3. 수집 대상 유형별로 DART 병렬 조회
+            fetch_tasks = [
+                self._dart_api.fetch_all_pages(
                     bgn_de=bgn_date,
                     end_de=end_date,
                     pblntf_ty=pblntf_ty,
                 )
-                all_items.extend(items)
+                for pblntf_ty in TARGET_PBLNTF_TYPES
+            ]
+            results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
 
-            # 4. Top300 기업 필터링
-            filtered = [item for item in all_items if item.corp_code in top300_codes]
+            all_items = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error("DART 조회 실패 (유형=%s): %s", TARGET_PBLNTF_TYPES[i], result)
+                    continue
+                all_items.extend(result)
+
+            # 4. 수집 대상 기업 필터링
+            filtered = [item for item in all_items if item.corp_code in target_codes]
 
             # 5. 분류 및 변환
-            classifier = DisclosureClassifier()
             disclosures: list[Disclosure] = []
             for item in filtered:
                 disclosures.append(
@@ -91,9 +99,9 @@ class IncrementalCollectUseCase:
                         pblntf_ty=item.pblntf_ty,
                         pblntf_detail_ty=item.pblntf_detail_ty,
                         rm=item.rm,
-                        disclosure_group=classifier.classify_group(item.report_nm),
+                        disclosure_group=DisclosureClassifier.classify_group(item.report_nm),
                         source_mode="scheduled",
-                        is_core=classifier.is_core_disclosure(item.report_nm),
+                        is_core=DisclosureClassifier.is_core_disclosure(item.report_nm),
                     )
                 )
 
@@ -109,7 +117,7 @@ class IncrementalCollectUseCase:
             job.message = (
                 f"증분 수집 ({bgn_date}~{end_date}): "
                 f"대상유형 {TARGET_PBLNTF_TYPES}, "
-                f"조회 {len(all_items)}건, Top300 {len(filtered)}건, 저장 {saved_count}건"
+                f"조회 {len(all_items)}건, 수집대상 {len(filtered)}건, 저장 {saved_count}건"
             )
             await self._job_repo.update_job(job)
 

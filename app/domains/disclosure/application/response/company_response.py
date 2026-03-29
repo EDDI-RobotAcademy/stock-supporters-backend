@@ -27,8 +27,3 @@ class CollectCompaniesResponse(BaseModel):
     message: str
 
 
-class AddCompanyResponse(BaseModel):
-    corp_code: str
-    corp_name: str
-    target_type: str
-    message: str
