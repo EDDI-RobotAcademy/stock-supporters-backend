@@ -72,6 +72,31 @@
       ]
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "app\\infrastructure\\config\\settings.py",
+      "accessCount": 2,
+      "lastAccessed": 1774958975696,
+      "type": "file"
+    },
+    {
+      "path": "app\\adapter\\inbound\\api\\v1_router.py",
+      "accessCount": 1,
+      "lastAccessed": 1774958846127,
+      "type": "file"
+    },
+    {
+      "path": "app\\infrastructure\\database\\database.py",
+      "accessCount": 1,
+      "lastAccessed": 1774959029247,
+      "type": "file"
+    },
+    {
+      "path": "main.py",
+      "accessCount": 1,
+      "lastAccessed": 1774959029857,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }
