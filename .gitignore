@@ -411,3 +411,6 @@ pyrightconfig.json
 
 # Application logs
 logs/
+
+# oh-my-claudecode
+.omc/
